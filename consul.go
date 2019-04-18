@@ -2,23 +2,22 @@ package main
 
 import (
 	"fmt"
-
-	consul "github.com/hashicorp/consul/api"
+	consul_api "github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
 )
 
 // It is a external interface for consul.
 type Keeper interface {
 	Register(serviceId, serviceName, addr string, port int, tags []string,
-		check *consul.AgentServiceCheck) error
+		check *consul_api.AgentServiceCheck) error
 	DeRegister(serviceId string) error
 }
 
 type Container struct {
 	addr   string
 	port   string
-	config *consul.Config
-	agent  *consul.Agent
+	config *consul_api.Config
+	agent  *consul_api.Agent
 }
 
 // This struct used to create `keeper` object from use to a way of dependency injection.
@@ -46,8 +45,8 @@ func WithPortOption(port string) Option {
 	})
 }
 
-// Create Consul Config Option
-func WithConfigOption(config *consul.Config) Option {
+// Create consul Config Option
+func WithConfigOption(config *consul_api.Config) Option {
 	return optionFunc(func(c *Container) {
 		c.config = config
 	})
@@ -59,7 +58,7 @@ func NewKeeper(opts ...Option) (Keeper, error) {
 	o := []Option{
 		WithAddrOption("localhost"),
 		WithPortOption("8500"),
-		WithConfigOption(consul.DefaultConfig()),
+		WithConfigOption(consul_api.DefaultConfig()),
 	}
 	o = append(o, opts...)
 	ct := &Container{}
@@ -69,7 +68,7 @@ func NewKeeper(opts ...Option) (Keeper, error) {
 
 	// Connect to consul.
 	ct.config.Address = ct.address()
-	client, err := consul.NewClient(ct.config)
+	client, err := consul_api.NewClient(ct.config)
 	if err != nil {
 		return nil, errors.Wrap(err, "[err] consul client")
 	}
@@ -83,8 +82,8 @@ func (c *Container) address() string {
 
 // A method naming `Register` could connect to service in consul.
 func (c *Container) Register(serviceId, serviceName, addr string, port int, tags []string,
-	check *consul.AgentServiceCheck) error {
-	reg := &consul.AgentServiceRegistration{
+	check *consul_api.AgentServiceCheck) error {
+	reg := &consul_api.AgentServiceRegistration{
 		ID:      serviceId,
 		Name:    serviceName,
 		Address: addr,
@@ -92,7 +91,7 @@ func (c *Container) Register(serviceId, serviceName, addr string, port int, tags
 		Tags:    tags,
 	}
 	if check == nil {
-		check = &consul.AgentServiceCheck{}
+		check = &consul_api.AgentServiceCheck{}
 		check.HTTP = fmt.Sprintf("http://%s:%v", addr, port)
 		check.Interval = "10s"
 		check.Timeout = "5m"
