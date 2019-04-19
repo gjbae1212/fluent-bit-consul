@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	consul_api "github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
 )

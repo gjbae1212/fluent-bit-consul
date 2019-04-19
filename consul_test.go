@@ -1,11 +1,36 @@
 package main
 
 import (
+	"bytes"
+	"io/ioutil"
+	"net/http"
 	"testing"
 
 	consul_api "github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/assert"
 )
+
+// RoundTripFunc .
+type RoundTripFunc func(req *http.Request) *http.Response
+
+// RoundTrip .
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func mockClient() *http.Client {
+	fn := func(req *http.Request) *http.Response {
+		// Test request parameters
+		return &http.Response{
+			StatusCode: 200,
+			// Send response to be tested
+			Body: ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			// Must be set to non-nil value or it panics
+			Header: make(http.Header),
+		}
+	}
+	return &http.Client{Transport: RoundTripFunc(fn)}
+}
 
 func TestWithAddrOption(t *testing.T) {
 	assert := assert.New(t)
@@ -61,14 +86,29 @@ func TestNewKeeper(t *testing.T) {
 	assert.NotEmpty(keeper.(*Container).agent)
 }
 
-//func TestContainer_DeRegister(t *testing.T) {
-//	assert := assert.New(t)
-//}
-//
-//func TestContainer_Register(t *testing.T) {
-//	assert := assert.New(t)
-//}
-//
-//func TestContainer_Private(t *testing.T) {
-//
-//}
+func TestContainer_Register(t *testing.T) {
+	assert := assert.New(t)
+	cfg := &consul_api.Config{
+		HttpClient: mockClient(),
+	}
+	keeper, err := NewKeeper(WithConfigOption(cfg))
+	assert.NoError(err)
+
+	err = keeper.Register("allan-id", "allan-service", "11", 22, []string{}, nil)
+	assert.NoError(err)
+}
+
+func TestContainer_DeRegister(t *testing.T) {
+	assert := assert.New(t)
+
+	cfg := &consul_api.Config{
+		HttpClient: mockClient(),
+	}
+	keeper, err := NewKeeper(WithConfigOption(cfg))
+	assert.NoError(err)
+
+	err = keeper.DeRegister("aa")
+	assert.NoError(err)
+}
+
+// TODO: docker real test
