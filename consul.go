@@ -95,8 +95,8 @@ func (c *Container) Register(serviceId, serviceName, addr string, port int, tags
 		check = &consul_api.AgentServiceCheck{}
 		check.HTTP = fmt.Sprintf("http://%s:%v", addr, port)
 		check.Interval = "10s"
-		check.Timeout = "5m"
-		check.DeregisterCriticalServiceAfter = "50s"
+		check.Timeout = "2m"
+		check.DeregisterCriticalServiceAfter = "5m"
 	}
 	reg.Check = check
 	return c.agent.ServiceRegister(reg)

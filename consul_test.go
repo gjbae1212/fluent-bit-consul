@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	consul_api "github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/assert"
@@ -111,4 +114,39 @@ func TestContainer_DeRegister(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TODO: docker real test
+// docker run -d --name=dev-consul -p 8500:8500 -e CONSUL_BIND_INTERFACE=eth0 consul
+func localTest() {
+	go func() {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "test")
+		})
+		http.ListenAndServe(":8080", nil)
+	}()
+
+	keeper, err := NewKeeper()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = keeper.Register("allan",
+		"allan-service", "localhost", 8080, []string{},
+		&consul_api.AgentServiceCheck{
+			HTTP:     "http://localhost:8500",
+			Interval: "10s",
+			Timeout:  "1m",
+			DeregisterCriticalServiceAfter: "2m",
+		},
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	time.Sleep(60 * time.Second)
+	err = keeper.DeRegister("allan")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
