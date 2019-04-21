@@ -13,10 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// RoundTripFunc .
 type RoundTripFunc func(req *http.Request) *http.Response
 
-// RoundTrip .
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
@@ -145,9 +143,9 @@ func localTest() {
 	err = keeper.Register("allan",
 		"allan-service", "localhost", 8080, []string{},
 		&consul_api.AgentServiceCheck{
-			HTTP:     "http://localhost:8500",
-			Interval: "10s",
-			Timeout:  "1m",
+			HTTP:                           "http://localhost:8500",
+			Interval:                       "10s",
+			Timeout:                        "1m",
 			DeregisterCriticalServiceAfter: "2m",
 		},
 	)
