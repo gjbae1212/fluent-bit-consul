@@ -112,6 +112,20 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 
 //export FLBPluginFlush
 func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
+	result, err := plugin.CatalogServiceByName(serviceName)
+	if err != nil {
+		fmt.Printf("[err][search] %+v\n", err)
+		return output.FLB_OK
+	}
+	check := false
+	for _, svc := range result {
+		if svc.ServiceID == serviceId {
+			check = true
+		}
+	}
+	if !check {
+		fmt.Printf("[fail][search] not found search [%s][%s]\n", serviceName, serviceId)
+	}
 	return output.FLB_OK
 }
 

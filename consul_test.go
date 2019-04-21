@@ -27,7 +27,7 @@ func mockClient() *http.Client {
 		return &http.Response{
 			StatusCode: 200,
 			// Send response to be tested
-			Body: ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body: ioutil.NopCloser(bytes.NewBufferString(`[]`)),
 			// Must be set to non-nil value or it panics
 			Header: make(http.Header),
 		}
@@ -114,6 +114,19 @@ func TestContainer_DeRegister(t *testing.T) {
 	assert.NoError(err)
 }
 
+func TestContainer_CatalogServiceByName(t *testing.T) {
+	assert := assert.New(t)
+
+	cfg := &consul_api.Config{
+		HttpClient: mockClient(),
+	}
+	keeper, err := NewKeeper(WithConfigOption(cfg))
+	assert.NoError(err)
+
+	_, err = keeper.CatalogServiceByName("aa")
+	assert.NoError(err)
+}
+
 // docker run -d --name=dev-consul -p 8500:8500 -e CONSUL_BIND_INTERFACE=eth0 consul
 func localTest() {
 	go func() {
@@ -141,6 +154,15 @@ func localTest() {
 	if err != nil {
 		log.Println(err)
 		return
+	}
+
+	services, err := keeper.CatalogServiceByName("allan-service")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for _, service := range services {
+		log.Println(service.ServiceID)
 	}
 
 	time.Sleep(60 * time.Second)

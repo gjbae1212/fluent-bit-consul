@@ -65,5 +65,3 @@ func TestFLBPluginExit(t *testing.T) {
 	ok := FLBPluginExit()
 	assert.Equal(output.FLB_OK, ok)
 }
-
-// TODO: real test

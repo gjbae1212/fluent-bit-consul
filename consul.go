@@ -12,13 +12,15 @@ type Keeper interface {
 	Register(serviceId, serviceName, addr string, port int, tags []string,
 		check *consul_api.AgentServiceCheck) error
 	DeRegister(serviceId string) error
+	CatalogServiceByName(name string) ([]*consul_api.CatalogService, error)
 }
 
 type Container struct {
-	addr   string
-	port   string
-	config *consul_api.Config
-	agent  *consul_api.Agent
+	addr    string
+	port    string
+	config  *consul_api.Config
+	catalog *consul_api.Catalog
+	agent   *consul_api.Agent
 }
 
 // This struct used to create `keeper` object from use to a way of dependency injection.
@@ -73,6 +75,7 @@ func NewKeeper(opts ...Option) (Keeper, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "[err] consul client")
 	}
+	ct.catalog = client.Catalog()
 	ct.agent = client.Agent()
 	return Keeper(ct), nil
 }
@@ -105,4 +108,10 @@ func (c *Container) Register(serviceId, serviceName, addr string, port int, tags
 // A method naming `DeRegister` could disconnect to service in consul.
 func (c *Container) DeRegister(serviceId string) error {
 	return c.agent.ServiceDeregister(serviceId)
+}
+
+// A method is finding service list by name that its list should be already registered to consul.
+func (c *Container) CatalogServiceByName(name string) ([]*consul_api.CatalogService, error) {
+	result, _, err := c.catalog.Service(name, "", nil)
+	return result, err
 }
