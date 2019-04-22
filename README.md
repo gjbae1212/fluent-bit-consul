@@ -15,8 +15,11 @@
 
 ## OVERVIEW
 This project is output plugin for fluent-bit registered service in consul.
+
 Agent for fluent-bit will start and then it is registering consul with specified name in order to consul is periodically check to fluent-bit agent live.
+
 So it is available with monitoring solution same as prometheus, if fluent-bit agent will start with http server on.
+
 Prometheus with consul could do watch fluent-bit agent by metrics, and it is possibly alert for you when fluent-bit would be a fault.  
 
 ## Build
